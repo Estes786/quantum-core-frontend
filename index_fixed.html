@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Core - Analisis Sentimen AI (Fixed)</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .input-section {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.95rem;
+        }
+
+        textarea, input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 auto;
+        }
+
+        .analyze-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+
+        .analyze-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-section {
+            background: #f1f5f9;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #64748b;
+        }
+
+        .status-section.positive {
+            background: #f0fdf4;
+            border-left-color: #22c55e;
+            color: #166534;
+        }
+
+        .status-section.negative {
+            background: #fef2f2;
+            border-left-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .status-section.neutral {
+            background: #fefce8;
+            border-left-color: #eab308;
+            color: #854d0e;
+        }
+
+        .result-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            border: 1px solid #e2e8f0;
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .result-value {
+            color: #6b7280;
+            text-align: right;
+            max-width: 60%;
+            word-break: break-word;
+        }
+
+        .sentiment-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .sentiment-positive {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .sentiment-negative {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .confidence-bar {
+            width: 100px;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            transition: width 0.5s ease;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .config-section {
+            background: #e0f2fe;
+            border: 1px solid #0284c7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .config-section h3 {
+            color: #0c4a6e;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .config-input {
+            margin-bottom: 15px;
+        }
+
+        .config-input input {
+            font-size: 14px;
+            padding: 10px;
+        }
+
+        .examples-section {
+            margin-top: 30px;
+        }
+
+        .examples-section h3 {
+            margin-bottom: 15px;
+            color: #374151;
+        }
+
+        .example-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .example-btn {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .example-btn:hover {
+            background: #e5e7eb;
+            border-color: #9ca3af;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .input-section {
+                padding: 20px;
+            }
+
+            .result-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .result-value {
+                max-width: 100%;
+                text-align: left;
+            }
+
+            .example-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-brain"></i> Quantum Core (Fixed)</h1>
+            <p>Analisis Sentimen AI dengan Teknologi Machine Learning - Menggunakan Gradio Client</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Konfigurasi API -->
+            <div class="config-section">
+                <h3><i class="fas fa-cog"></i> Konfigurasi Gradio App</h3>
+                <div class="config-input">
+                    <label for="gradioUrl">URL Gradio App:</label>
+                    <input type="text" id="gradioUrl" value="https://elfaress24-quantum-core-ai-backend.hf.space/" placeholder="https://username-quantum-core-ai-backend.hf.space/">
+                </div>
+                <small style="color: #0c4a6e;">
+                    <i class="fas fa-info-circle"></i> 
+                    Masukkan URL lengkap Gradio app Anda (tanpa /api/predict)
+                </small>
+            </div>
+
+            <!-- Input Section -->
+            <div class="input-section">
+                <div class="form-group">
+                    <label for="textInput">
+                        <i class="fas fa-edit"></i> Teks untuk Analisis Sentimen
+                    </label>
+                    <textarea 
+                        id="textInput" 
+                        placeholder="Masukkan teks yang ingin dianalisis sentimen-nya...&#10;&#10;Contoh:&#10;- Review produk&#10;- Komentar pelanggan&#10;- Feedback layanan&#10;- Opini atau pendapat"
+                    ></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="reviewId">
+                        <i class="fas fa-tag"></i> ID Review (Opsional)
+                    </label>
+                    <input 
+                        type="text" 
+                        id="reviewId" 
+                        placeholder="Akan dibuat otomatis jika kosong"
+                    >
+                </div>
+
+                <button id="analyzeButton" class="analyze-btn">
+                    <i class="fas fa-search"></i>
+                    <span>Analisis Sentimen</span>
+                </button>
+            </div>
+
+            <!-- Status Section -->
+            <div id="statusSection" class="status-section">
+                <i class="fas fa-info-circle"></i> 
+                <span id="statusText">Siap untuk menganalisis. Masukkan teks dan klik tombol analisis.</span>
+            </div>
+
+            <!-- Result Section -->
+            <div id="resultSection" class="result-section">
+                <h3 style="margin-bottom: 20px; color: #374151;">
+                    <i class="fas fa-chart-line"></i> Hasil Analisis
+                </h3>
+                <div id="resultContent"></div>
+            </div>
+
+            <!-- Examples Section -->
+            <div class="examples-section">
+                <h3><i class="fas fa-lightbulb"></i> Contoh Teks untuk Dicoba</h3>
+                <div class="example-buttons">
+                    <button class="example-btn" data-text="Saya sangat senang dengan produk ini! Kualitasnya luar biasa dan pelayanannya memuaskan.">
+                        Review Positif
+                    </button>
+                    <button class="example-btn" data-text="Pelayanan yang mengecewakan, tidak akan kembali lagi. Produk tidak sesuai ekspektasi.">
+                        Review Negatif
+                    </button>
+                    <button class="example-btn" data-text="Produk biasa saja, tidak ada yang istimewa tapi juga tidak mengecewakan.">
+                        Review Netral
+                    </button>
+                    <button class="example-btn" data-text="Amazing product! Highly recommended for everyone. Great quality and fast delivery.">
+                        English Positive
+                    </button>
+                    <button class="example-btn" data-text="The service was terrible and the staff was rude. Very disappointed with my experience.">
+                        English Negative
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Gradio Client -->
+    <script type="module">
+        import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const textInput = document.getElementById('textInput');
+            const reviewIdInput = document.getElementById('reviewId');
+            const analyzeButton = document.getElementById('analyzeButton');
+            const statusSection = document.getElementById('statusSection');
+            const statusText = document.getElementById('statusText');
+            const resultSection = document.getElementById('resultSection');
+            const resultContent = document.getElementById('resultContent');
+            const gradioUrlInput = document.getElementById('gradioUrl');
+            const exampleButtons = document.querySelectorAll('.example-btn');
+
+            // Example button handlers
+            exampleButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const exampleText = this.getAttribute('data-text');
+                    textInput.value = exampleText;
+                    textInput.focus();
+                });
+            });
+
+            // Helper functions
+            function updateStatus(type, message) {
+                statusSection.className = `status-section ${type}`;
+                statusText.textContent = message;
+            }
+
+            function setLoading(loading) {
+                analyzeButton.disabled = loading;
+                const buttonText = analyzeButton.querySelector('span');
+                const buttonIcon = analyzeButton.querySelector('i');
+                
+                if (loading) {
+                    buttonIcon.className = 'loading';
+                    buttonText.textContent = 'Menganalisis...';
+                } else {
+                    buttonIcon.className = 'fas fa-search';
+                    buttonText.textContent = 'Analisis Sentimen';
+                }
+            }
+
+            function hideResult() {
+                resultSection.classList.remove('show');
+            }
+
+            function displayResult(data) {
+                const sentiment = data.sentiment || data[2] || 'Unknown';
+                const score = data.score || data[3] || 0;
+                const reviewId = data.review_id || data[0] || 'N/A';
+                const text = data.text || data[1] || 'N/A';
+                
+                const sentimentClass = sentiment.toLowerCase() === 'positive' ? 'sentiment-positive' : 'sentiment-negative';
+                const confidencePercentage = Math.round(score * 100);
+
+                resultContent.innerHTML = `
+                    <div class="result-item">
+                        <span class="result-label">Review ID:</span>
+                        <span class="result-value">${reviewId}</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Teks Asli:</span>
+                        <span class="result-value">${text}</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Sentimen:</span>
+                        <span class="sentiment-badge ${sentimentClass}">${sentiment}</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Confidence Score:</span>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: ${confidencePercentage}%"></div>
+                            </div>
+                            <span>${confidencePercentage}%</span>
+                        </div>
+                    </div>
+                `;
+
+                resultSection.classList.add('show');
+            }
+
+            // Main analyze function using Gradio Client
+            analyzeButton.addEventListener('click', async function() {
+                const text = textInput.value.trim();
+                const reviewId = reviewIdInput.value.trim();
+                const gradioUrl = gradioUrlInput.value.trim();
+
+                // Validation
+                if (!text) {
+                    updateStatus('error', 'Teks tidak boleh kosong!');
+                    return;
+                }
+
+                if (!gradioUrl) {
+                    updateStatus('error', 'Silakan masukkan URL Gradio app terlebih dahulu!');
+                    return;
+                }
+
+                // Start analysis
+                setLoading(true);
+                updateStatus('loading', 'Menghubungi Gradio backend...');
+                hideResult();
+
+                try {
+                    // Generate review ID if empty
+                    const finalReviewId = reviewId || `review-${Date.now()}`;
+
+                    // Connect to Gradio app
+                    updateStatus('loading', 'Menghubungkan ke Gradio app...');
+                    const app = await Client.connect(gradioUrl);
+
+                    // Call the analyze_sentiment function
+                    updateStatus('loading', 'Menganalisis sentimen...');
+                    const result = await app.predict("/analyze_sentiment", [text, finalReviewId]);
+
+                    console.log('Gradio result:', result);
+
+                    // Check if result has data
+                    if (!result.data) {
+                        throw new Error('Tidak ada data yang dikembalikan dari Gradio app');
+                    }
+
+                    // Parse the result - Gradio returns data as array
+                    const data = result.data;
+                    
+                    // Create a structured object for display
+                    const structuredData = {
+                        review_id: data[0] || finalReviewId,
+                        text: data[1] || text,
+                        sentiment: data[2] || 'Unknown',
+                        score: data[3] || 0
+                    };
+
+                    // Display results
+                    displayResult(structuredData);
+                    updateStatus('success', `Analisis selesai! Sentimen: ${structuredData.sentiment}`);
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    let errorMessage = error.message;
+                    
+                    // Provide helpful error messages
+                    if (errorMessage.includes('Failed to fetch') || errorMessage.includes('fetch')) {
+                        errorMessage = 'Tidak dapat terhubung ke Gradio app. Periksa URL dan koneksi internet.';
+                    } else if (errorMessage.includes('CORS')) {
+                        errorMessage = 'Error CORS. Pastikan Gradio app dapat diakses secara publik.';
+                    } else if (errorMessage.includes('404')) {
+                        errorMessage = 'Gradio app tidak ditemukan. Periksa URL yang dimasukkan.';
+                    } else if (errorMessage.includes('analyze_sentiment')) {
+                        errorMessage = 'Fungsi analyze_sentiment tidak ditemukan di Gradio app. Pastikan backend sudah dikonfigurasi dengan benar.';
+                    }
+                    
+                    updateStatus('error', `Error: ${errorMessage}`);
+                } finally {
+                    setLoading(false);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
