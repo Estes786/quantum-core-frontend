@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Core - Analisis Sentimen AI</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1rem;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 1rem;
+            line-height: 1.5;
+            resize: vertical;
+            min-height: 120px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+        }
+
+        .loading.active {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-section {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-header {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .sentiment-result {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .sentiment-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .sentiment-positive {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .sentiment-negative {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .confidence-score {
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        .examples {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f0f2f5;
+            border-radius: 12px;
+        }
+
+        .examples h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .example-text {
+            background: white;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #e1e5e9;
+        }
+
+        .example-text:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .sentiment-result {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-brain"></i> Quantum Core</h1>
+            <p>Analisis Sentimen AI - Powered by Hugging Face</p>
+        </div>
+
+        <div class="content">
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="textInput">
+                        <i class="fas fa-comment-alt"></i> Teks untuk Analisis Sentimen
+                    </label>
+                    <textarea 
+                        id="textInput" 
+                        placeholder="Masukkan teks yang ingin Anda analisis sentimen-nya di sini...
+Contoh: 'Produk ini sangat bagus dan berkualitas tinggi! Saya sangat puas dengan pembelian ini.'"
+                    ></textarea>
+                </div>
+
+                <button class="analyze-btn" onclick="analyzeText()">
+                    <i class="fas fa-search loading"></i>
+                    <span class="btn-text">Analisis Sentimen</span>
+                </button>
+            </div>
+
+            <div class="result-section" id="resultSection">
+                <div class="result-header">
+                    <i class="fas fa-chart-line"></i> Hasil Analisis
+                </div>
+                <div id="resultContent"></div>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <div class="examples">
+                <h3><i class="fas fa-lightbulb"></i> Contoh Teks untuk Dicoba</h3>
+                <div class="example-text" onclick="setExampleText(this)">
+                    Produk ini luar biasa! Kualitas sangat baik dan pelayanan yang memuaskan.
+                </div>
+                <div class="example-text" onclick="setExampleText(this)">
+                    Saya sangat kecewa dengan produk ini. Kualitasnya buruk dan tidak sesuai ekspektasi.
+                </div>
+                <div class="example-text" onclick="setExampleText(this)">
+                    Pengalaman belanja yang biasa saja, tidak ada yang istimewa tapi juga tidak mengecewakan.
+                </div>
+                <div class="example-text" onclick="setExampleText(this)">
+                    Film ini sangat menghibur dan alur ceritanya menarik. Sangat direkomendasikan!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setExampleText(element) {
+            document.getElementById('textInput').value = element.textContent.trim();
+        }
+
+        async function analyzeText() {
+            const textInput = document.getElementById('textInput');
+            const resultSection = document.getElementById('resultSection');
+            const resultContent = document.getElementById('resultContent');
+            const errorMessage = document.getElementById('errorMessage');
+            const analyzeBtn = document.querySelector('.analyze-btn');
+            const loading = document.querySelector('.loading');
+            const btnText = document.querySelector('.btn-text');
+
+            const text = textInput.value.trim();
+
+            if (!text) {
+                showError('Silakan masukkan teks yang ingin dianalisis.');
+                return;
+            }
+
+            // Show loading state
+            analyzeBtn.disabled = true;
+            loading.classList.add('active');
+            btnText.textContent = 'Menganalisis...';
+            hideError();
+            resultSection.classList.remove('show');
+
+            try {
+                const response = await fetch('https://elfaress24-quantum-core-ai-backend.hf.space/api/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        inputs: text
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                // Handle the response format
+                let sentiment, score;
+                
+                if (Array.isArray(data) && data.length > 0) {
+                    // Handle array response format
+                    const result = data[0];
+                    if (Array.isArray(result) && result.length > 0) {
+                        sentiment = result[0].label;
+                        score = result[0].score;
+                    } else {
+                        sentiment = result.label;
+                        score = result.score;
+                    }
+                } else if (data.label && data.score) {
+                    // Handle direct object response
+                    sentiment = data.label;
+                    score = data.score;
+                } else {
+                    throw new Error('Format respons tidak valid');
+                }
+
+                displayResult(sentiment, score);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Terjadi kesalahan saat menganalisis teks. Silakan coba lagi. Error: ' + error.message);
+            } finally {
+                // Reset button state
+                analyzeBtn.disabled = false;
+                loading.classList.remove('active');
+                btnText.textContent = 'Analisis Sentimen';
+            }
+        }
+
+        function displayResult(sentiment, score) {
+            const resultContent = document.getElementById('resultContent');
+            const resultSection = document.getElementById('resultSection');
+
+            const sentimentText = sentiment.toUpperCase() === 'POSITIVE' ? 'POSITIF' : 'NEGATIF';
+            const sentimentClass = sentiment.toUpperCase() === 'POSITIVE' ? 'sentiment-positive' : 'sentiment-negative';
+            const confidencePercent = (score * 100).toFixed(1);
+
+            resultContent.innerHTML = `
+                <div class="sentiment-result">
+                    <div class="sentiment-badge ${sentimentClass}">
+                        <i class="fas fa-${sentiment.toUpperCase() === 'POSITIVE' ? 'smile' : 'frown'}"></i>
+                        ${sentimentText}
+                    </div>
+                    <div class="confidence-score">
+                        <strong>Confidence:</strong> ${confidencePercent}%
+                    </div>
+                </div>
+                <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid ${sentiment.toUpperCase() === 'POSITIVE' ? '#28a745' : '#dc3545'};">
+                    <strong>Interpretasi:</strong><br>
+                    Teks yang Anda masukkan memiliki sentimen <strong>${sentimentText.toLowerCase()}</strong> 
+                    dengan tingkat kepercayaan <strong>${confidencePercent}%</strong>.
+                    ${confidencePercent > 80 ? ' Model sangat yakin dengan prediksi ini.' : 
+                      confidencePercent > 60 ? ' Model cukup yakin dengan prediksi ini.' : 
+                      ' Model kurang yakin dengan prediksi ini, mungkin teks bersifat netral.'}
+                </div>
+            `;
+
+            resultSection.classList.add('show');
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+        }
+
+        function hideError() {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.classList.remove('show');
+        }
+
+        // Auto-resize textarea
+        document.getElementById('textInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+
+        // Allow Enter key to submit
+        document.getElementById('textInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                analyzeText();
+            }
+        });
+    </script>
+</body>
+</html>
